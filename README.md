@@ -59,24 +59,24 @@
 
 ### `search_listings`
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
-- **Returns:**
-- **When it has nothing:**
+- **What it does: Searches for clothing items in the listings database that match the user's requested clothing item description.**
+- **Inputs: description (string), size (string), max_price (float)** <!-- name and type each: `max_price` (float), not "a price" -->
+- **Returns: An array of dictionaries**
+- **When it has nothing: Returns an empty array**
 
 ### `suggest_outfit`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does: Given a thrifted item and the user's wardrobe, suggest one or two outfits**
+- **Inputs: new_item (dictionary), wardrobe (dictionary)**
+- **Returns: A non empty string with outfit suggestions**
+- **When it has nothing: Return general styling advice**
 
 ### `create_fit_card`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does: Writes a short caption about the clothing item and subsequent outfit**
+- **Inputs: outfit (string), new_item (dictionary)**
+- **Returns: A string containing a two-to-four sentence caption**
+- **When it has nothing: Returns a descriptive message**
 
 ---
 
@@ -93,14 +93,19 @@
      The grader checks your code against what you claim here, so the file and
      function have to be real. -->
 
-**Branch rule:**
+**Branch rule: If search listings returns an empty list, call the _nothing_found_message function and return the session. Otherwise take the selected item and wardrobe and call suggest_outfit**
 
 **Where it lives:** `agent.py::run_agent`
 
-**How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+**How the query is parsed: regex** <!-- regex, string splitting, or asking the model — say which -->
 
-**What moves through the session:** <!-- which fields, in what order -->
-
+**What moves through the session: ** <!-- which fields, in what order -->
+1. Parsed
+2. Search_results
+3. Error (if applicable)
+4. Selected_item
+5. Outfit_suggestion
+6. Fit_card
 ---
 
 ## Sample Run
