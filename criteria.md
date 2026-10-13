@@ -29,6 +29,7 @@ tool calls and returns a fit card — in at least 4 of 5 tries.
      "my search is a plain keyword match and some phrasings will miss" is a
      real answer. -->
 
+The query is parsed using a regex. Given that the regex is a prototype, small discrepencies can occur from it in the resulting parsed text. Because of this, the target is 4 out of 5 to take into account potential issues with the parsing. 
 ---
 
 ## 2. An impossible query stops before the second tool
@@ -40,9 +41,12 @@ Given a query that matches no listings, the agent stops before calling
 <!-- Why is 5 of 5 reasonable here when criterion 1 isn't? What's different
      about this path? -->
 
+This is a strict target to validate that the subsequent tools called after search_listings receive a valid and expected input. 
 ---
 
-## 3. Something about state
+## 3. Session state update after each tool call
+
+Before each tool call, the session state and input to the tool should match - 5 out of 5 tries. 
 
 <!-- YOU WRITE THIS ONE.
 
@@ -57,7 +61,7 @@ Given a query that matches no listings, the agent stops before calling
 
 
 **Why this target:**
-
+By validating the session state is updated, the tool being called will receive the most up to date information. This is critical because without the correct information, the tool call will waste the user's tokens, not accomplish the intended task, cause ineffiency with additional tool calls. 
 
 
 ---
@@ -75,10 +79,11 @@ Given a query that matches no listings, the agent stops before calling
      sentence? A card longer than a caption anyone would post? Any of those can
      be turned into a number. -->
 
-
+Given a outfit suggestion and selected item, the fit card should create a consice description (1 - 3 sentences) that the user you can post - 5 out of 5 tries. 
 
 **Why this target:**
 
+To capture the attention of modern day social media users, it is critical to create consice descriptions of the fit card. This ensures that other people will actually read the full description.
 
 
 ---
@@ -92,10 +97,11 @@ Given a query that matches no listings, the agent stops before calling
      search respects a price ceiling — anything, as long as it names a number
      or an observable outcome. -->
 
-
+Given a query with a price, search listings should return items that are within the bounds of 0 < price < price + 10. 
 
 **Why this target:**
 
+Modern day thrifting has an emphasis on finding affordable, stylish clothing items. It is critical that the item returned by search listings is within the expected budget of the user. If the price is to high, the other tool calls to suggest outfits and the fit card become useless to the user if they can not purchase the item. 
 
 
 ---
