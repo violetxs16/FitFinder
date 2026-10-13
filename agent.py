@@ -17,7 +17,7 @@ import config
 import trace
 from tools import search_listings, suggest_outfit, create_fit_card
 from generate import ModelUnavailable
-
+import re
 
 # ── session state ─────────────────────────────────────────────────────────────
 
@@ -46,7 +46,32 @@ def new_session(query: str, wardrobe: dict) -> dict:
         "error": None,               # set when the run ended early
     }
 
+_PRICE_RE = re.compile(r"(?:under|below|less than|max|up to)?\s*\$\s*(\d+(?:\.\d+)?)", re.I)
+_SIZE_WORDS = r"XXS|XS|S|M|L|XL|XXL"
+_SIZE_RE = re.compile(rf"\bsize\s+({_SIZE_WORDS}|US\s*\d+(?:\.\d+)?|W\d+)\b", re.I)
+_BARE_SIZE_RE = re.compile(rf",\s*({_SIZE_WORDS})\s*$", re.I)
+def parse_query(query: str) -> dict:
+    """Extract a description, optional size, and optional price cealing"""
+    text = query or ""
 
+    max_price = None
+    price_match = _PRICE_RE.search(text)
+
+    if price_match:
+        price_match = float(price_match.group(1))
+        text = text[:price_match.start()] + " " + text[price_match.end():]
+        #text is removing the price match from the query
+    
+    size = None
+    size_match = _SIZE_RE.search(text) or _BARE_SIZE_RE.search(text)
+    if size_match:
+        #I dont know what r means. I dont know what re is. Sub means substitute. I dont understand what the previous call made. what strip does.
+        size = re.sub(r"\s+", " ", size_match.group(1)).strip().upper()
+        text = text[:size_match.start()] + " " + text[size_match.end():]
+    #dont understand re. or the exact syntax of the sub function
+    description = re.sub(r"[,\s]",  " ", text).strip(" ,")
+    #we are returning json
+    return {"description": description, "size": size, "max_price": max_price}
 # ── planning loop ─────────────────────────────────────────────────────────────
 
 def run_agent(query: str, wardrobe: dict) -> dict:
@@ -107,11 +132,60 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     """
     session = new_session(query, wardrobe)
 
-    # TODO: delete these two lines and build the loop.
-    session["error"] = "The planning loop isn't built yet — see the TODO in agent.py."
+    steps = 0
+    steps += 1
+    #unsure of what trace does
+    trace.check_iterations(steps)
+    parsed = parse_query(query)
+    session["parsed"] = parsed
+
+    steps += 1
+    trace.check_iterations(steps)
+    results = search_listings(
+        parsed["description"], parsed["size"], parsed["max_price"]
+    )
+    session["search_results"] = results
+
+    if not results:
+        session["error"] = _nothing_found_message(parsed)
+        return session
+
+    steps += 1
+    trace.check_iterations(steps)
+    session["selected_item"] = results[0]
+
+    steps += 1
+    trace.check_iterations(steps)
+    session["outfit_suggestion"] = suggest_outfit(
+        session["selected_item"], session["wardrobe"]
+    )
+
+    steps += 1
+    trace.check_iterations(steps)
+    session["fit_card"] = create_fit_card(
+        session["outfit_suggestion"], session["selected_item"]
+    )
     return session
 
+def _nothing_found_message(parsed: dict) -> str:
+    """Tell the user which search inputs they could broaden."""
+    #dont understand what r does in a f string
+    tried = [f"description {parsed['description']!r}"]
+    if parsed["size"]:
+        tried.append(f"size {parsed['size']}")
+    if parsed["max_price"]:
+        #what does g do?
+        tried.append(f"under ${parsed["max_price"]:g}")
 
+    suggestions = ["try broader words - 'jacket' finds more than 'cropped corduroy jacket'"]
+    if parsed["size"]:
+        suggestions.append("drop the size, or try a neighboring one")
+    if parsed["max_price"]:
+        suggestions.append(f"raise the price cealing above ${parsed['max_price']:g}")
+        return (
+            "Nothing in the listings matched " + ", ".jion(tried) + ".\n"
+            "Things to change: " + "; ".join(suggestions) + "."
+        )
 # ── running it directly ───────────────────────────────────────────────────────
 
 def _show(session: dict) -> None:

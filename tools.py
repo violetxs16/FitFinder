@@ -154,3 +154,4 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
     """
     # TODO: replace this with your implementation
     return ""
+
