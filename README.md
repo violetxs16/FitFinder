@@ -40,7 +40,7 @@
 ## What This Does
 
 <!-- Three or four sentences: what a user asks for, and what they get back. -->
-
+FitFinder is an agent that specializes in thrifting. Given a description like "a vintage graphic tee under $30, size M", the agent searches listings, works out what it would go with, and writes a caption for it.
 
 
 ---
@@ -152,15 +152,15 @@ $ python -c "from tools import create_fit_card; ..."
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for: Debugging an error with the regex function*
+- *What came back: The exact spot that was causing the code to crash*
+- *What I changed: The regex expression within the agent.py file was changed*
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for: Finetuning the scoring algorithm I built to correctly score clothing items agaisn't the query*
+- *What came back: The agent suggested updating my if statements to explicitly check for None for the filters.*
+- *What I changed: The if statements were updated to check for None for the filters.*
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 

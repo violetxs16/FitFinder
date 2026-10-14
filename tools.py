@@ -78,8 +78,63 @@ def search_listings(
     Test it from a terminal before you move on:
         python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
     """
-    # TODO: replace this with your implementation
-    return []
+    # 1. Load every listing with load_listings().
+    listings = load_listings()
+    matching_items = []
+    for item in listings:
+        # item is a dictionary
+        # 2. Filter by max_price and by size, when each is provided.
+        if max_price is not None and size is not None:
+            item_price = item["price"]
+            item_size = item["size"].upper()
+            if item_price <= max_price and item_size == size:
+                matching_items.append(item)
+                continue
+        elif max_price is not None:
+            item_price = item["price"]
+            if item_price <= max_price:
+                matching_items.append(item)
+                continue
+        elif size is not None:
+            item_size = item["size"]
+            if item_size == size:
+                matching_items.append(item)
+                continue
+        else:
+            matching_items = listings
+            break
+    #   3. Score what's left by keyword overlap with `description`.
+    description = description.lower()
+    words_description = description.split()
+    words_set = set(words_description)
+
+    scored_item = []
+    scored_item_scores = []
+    for item in matching_items:
+        item_description = item["description"].lower()
+        item_split = item_description.split()
+        item_set = set(item_split)
+    #         4. Drop anything scoring zero.       
+        if len(item_set & words_set) == 0: #no common key words
+            continue
+        else:
+            #Using auxilary array to keep track of scores for the clothing items. The position of the array is key.
+            scored_item_scores.append(len(item_set & words_set))
+            scored_item.append(item)
+
+    #         5. Sort by score, highest first, and return the listing dicts —
+    #            at most config.SEARCH_RESULT_LIMIT of them.
+    organized_items = []
+    while len(scored_item) > 0:
+        #find highest score first
+        highest = scored_item_scores.index(max(scored_item_scores))
+        #Grab the dictionary in the primary array at the index
+        highest_item = scored_item[highest]
+        organized_items.append(highest_item)
+        #remove the highest item from the dictionary
+        del scored_item[highest]
+        del scored_item_scores[highest]
+    return organized_items
 
 
 # ── Tool 2: suggest_outfit ────────────────────────────────────────────────────
@@ -102,18 +157,23 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
         raising or returning "". Unit 4 has you trigger the empty wardrobe on
         purpose, so decide now what it should do.
 
-    TODO:
-        1. Check whether wardrobe['items'] is empty.
-        2. If it is, ask the model for general styling ideas for this item.
-        3. If it isn't, format the wardrobe items into the prompt and ask for
-           specific combinations naming pieces the user already owns.
-        4. Return the model's response.
 
     Test it from a terminal before you move on:
         python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
     """
-    # TODO: replace this with your implementation
-    return ""
+    # TODO:
+    #1. Check whether wardrobe['items'] is empty.
+    system_instructions = "You are an expert stylist with over 10 years in the fashion industry. Given a dictionary that contains attribute about a new clothing item, your role is to take an existing wardrobe to create different clothing combinations with the new item and existing wardrobe. If the wardrobe is empty, give general styling advice. Input: item (dictionary), wardrobe (array of dictionaries). Output: suggestions (string) "
+    prompt = ""
+    if wardrobe["items"] is None:
+    #   2. If it is, ask the model for general styling ideas for this item.
+        prompt = f"Using the provided clothing item as a base, provide general styling ideas that suit this item. Here is the item: {new_item}."
+    else:
+    #   3. If it isn't, format the wardrobe items into the prompt and ask for
+    #            specific combinations naming pieces the user already owns.
+        prompt = f"Using the provided clothing item, create different outfit combinations with items that also exist in the wadrobe. Here is the item: {new_item}. Here is my wardrobe: {wardrobe["items"]}"
+    #4. Return the model's response.
+    return generate(prompt, system_instructions)
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
@@ -144,14 +204,16 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
         • CACHE_ENABLED — the adapter handed back an answer it already had
         • TEMPERATURE   — at 0.0 the model gives the same words every time
 
-    TODO:
-        1. Guard against an empty or whitespace-only `outfit`.
-        2. Build a prompt with the item details and the outfit.
-        3. Call generate() and return the response.
-
     Test it from a terminal before you move on:
         python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
     """
-    # TODO: replace this with your implementation
-    return ""
+    #  TODO:
+    # 1. Guard against an empty or whitespace-only `outfit`.
+    if outfit == "" or outfit == " ":
+        return "No outfit suggestion found."
+    # 2. Build a prompt with the item details and the outfit.
+    prompt = "Given a outfit and a new clothing item, create a two-to-four sentence caption that will draw people's attention. Here are the inputs: {outfit} (string), {new_item} (dictionary). Here is the expected output: A two-to-four sentence caption (string)"
+    system_instructions = "You are an expert social media manager with over 10 years of experience. You excel in capturing an audience's attention with captivating descriptions. Your role is to create captions for social media postsabout the outfit and new clothing item of the user. Constraints: 1. The caption should read like a real post rather than a product description 2. Mention the item once 3. Mention the item's price once 4. Mention the item's platform once 5. Be specific about the outfit's vibe"
+    # 3. Call generate() and return the response.
+    return generate(prompt, system_instructions)
 

@@ -58,7 +58,7 @@ def parse_query(query: str) -> dict:
     price_match = _PRICE_RE.search(text)
 
     if price_match:
-        price_match = float(price_match.group(1))
+        max_price = float(price_match.group(1))
         text = text[:price_match.start()] + " " + text[price_match.end():]
         #text is removing the price match from the query
     
@@ -183,7 +183,7 @@ def _nothing_found_message(parsed: dict) -> str:
     if parsed["max_price"]:
         suggestions.append(f"raise the price cealing above ${parsed['max_price']:g}")
         return (
-            "Nothing in the listings matched " + ", ".jion(tried) + ".\n"
+            "Nothing in the listings matched " + ", ".join(tried) + ".\n"
             "Things to change: " + "; ".join(suggestions) + "."
         )
 # ── running it directly ───────────────────────────────────────────────────────
